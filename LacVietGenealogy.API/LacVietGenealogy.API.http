@@ -1,0 +1,6 @@
+@LacVietGenealogy.API_HostAddress = http://localhost:5082
+
+GET {{LacVietGenealogy.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
