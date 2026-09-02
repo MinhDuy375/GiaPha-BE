@@ -4,6 +4,7 @@ using LacVietGenealogy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LacVietGenealogy.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260902082401_AddUserFullNameAndMustChangePassword")]
+    partial class AddUserFullNameAndMustChangePassword
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,44 +24,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.FamilyEvent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("EventDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid>("FamilyTreeId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<bool>("IsRecurringYearly")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<Guid?>("MemberId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyTreeId");
-
-                    b.HasIndex("MemberId");
-
-                    b.ToTable("FamilyEvents");
-                });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.FamilyTree", b =>
                 {
@@ -104,7 +69,7 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Property<Guid?>("LinkedMemberId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid>("RoleGroupId")
+                    b.Property<Guid>("RoleId")
                         .HasColumnType("char(36)");
 
                     b.Property<int>("Status")
@@ -119,50 +84,12 @@ namespace LacVietGenealogy.Infrastructure.Migrations
 
                     b.HasIndex("LinkedMemberId");
 
-                    b.HasIndex("RoleGroupId");
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("UserId", "FamilyTreeId")
                         .IsUnique();
 
                     b.ToTable("FamilyTreeMemberships");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.GalleryImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Caption")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("FamilyTreeId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("FileUrl")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid?>("MemberId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyTreeId");
-
-                    b.HasIndex("MemberId");
-
-                    b.ToTable("GalleryImages");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.Member", b =>
@@ -183,28 +110,7 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Property<DateTime?>("BirthDateSolar")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("BirthDay")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BirthLunarDay")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BirthLunarMonth")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BirthLunarYear")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BirthMonth")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("BirthOrder")
-                        .HasColumnType("int");
-
                     b.Property<string>("CourtesyName")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CurrentResidence")
                         .HasColumnType("longtext");
 
                     b.Property<string>("DeathDateLunar")
@@ -212,21 +118,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
 
                     b.Property<DateTime?>("DeathDateSolar")
                         .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("DeathDay")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeathLunarDay")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeathLunarMonth")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeathLunarYear")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("DeathMonth")
-                        .HasColumnType("int");
 
                     b.Property<Guid>("FamilyTreeId")
                         .HasColumnType("char(36)");
@@ -243,21 +134,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
 
                     b.Property<bool>("IsAlive")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsInLaw")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Occupation")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("OtherNames")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("TabooName")
                         .HasColumnType("longtext");
@@ -311,16 +187,15 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<Guid>("MenuId")
-                        .HasColumnType("char(36)");
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MenuId");
 
                     b.ToTable("Permissions");
                 });
@@ -354,21 +229,15 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.RoleGroup", b =>
+            modelBuilder.Entity("LacVietGenealogy.Core.Entities.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
-
-                    b.Property<Guid>("FamilyTreeId")
-                        .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -376,24 +245,22 @@ namespace LacVietGenealogy.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FamilyTreeId");
-
-                    b.ToTable("RoleGroups");
+                    b.ToTable("Roles");
                 });
 
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.RoleGroupPermission", b =>
+            modelBuilder.Entity("LacVietGenealogy.Core.Entities.RolePermission", b =>
                 {
-                    b.Property<Guid>("RoleGroupId")
+                    b.Property<Guid>("RoleId")
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("PermissionId")
                         .HasColumnType("char(36)");
 
-                    b.HasKey("RoleGroupId", "PermissionId");
+                    b.HasKey("RoleId", "PermissionId");
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RoleGroupPermissions");
+                    b.ToTable("RolePermissions");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.SpouseRelationship", b =>
@@ -423,59 +290,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.HasIndex("WifeId");
 
                     b.ToTable("SpouseRelationships");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.SystemMenu", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Alias")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid>("ModuleId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ModuleId");
-
-                    b.ToTable("SystemMenus");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.SystemModule", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Alias")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SystemModules");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.User", b =>
@@ -514,22 +328,24 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.FamilyEvent", b =>
+            modelBuilder.Entity("LacVietGenealogy.Core.Entities.UserRole", b =>
                 {
-                    b.HasOne("LacVietGenealogy.Core.Entities.FamilyTree", "FamilyTree")
-                        .WithMany()
-                        .HasForeignKey("FamilyTreeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
 
-                    b.HasOne("LacVietGenealogy.Core.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("char(36)");
 
-                    b.Navigation("FamilyTree");
+                    b.Property<Guid>("FamilyTreeId")
+                        .HasColumnType("char(36)");
 
-                    b.Navigation("Member");
+                    b.HasKey("UserId", "RoleId", "FamilyTreeId");
+
+                    b.HasIndex("FamilyTreeId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.FamilyTree", b =>
@@ -556,14 +372,14 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                         .HasForeignKey("LinkedMemberId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("LacVietGenealogy.Core.Entities.RoleGroup", "RoleGroup")
-                        .WithMany("Memberships")
-                        .HasForeignKey("RoleGroupId")
+                    b.HasOne("LacVietGenealogy.Core.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("LacVietGenealogy.Core.Entities.User", "User")
-                        .WithMany("Memberships")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -572,27 +388,9 @@ namespace LacVietGenealogy.Infrastructure.Migrations
 
                     b.Navigation("LinkedMember");
 
-                    b.Navigation("RoleGroup");
+                    b.Navigation("Role");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.GalleryImage", b =>
-                {
-                    b.HasOne("LacVietGenealogy.Core.Entities.FamilyTree", "FamilyTree")
-                        .WithMany()
-                        .HasForeignKey("FamilyTreeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LacVietGenealogy.Core.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("FamilyTree");
-
-                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.Member", b =>
@@ -633,17 +431,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.Permission", b =>
-                {
-                    b.HasOne("LacVietGenealogy.Core.Entities.SystemMenu", "Menu")
-                        .WithMany("Permissions")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Menu");
-                });
-
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.RefreshToken", b =>
                 {
                     b.HasOne("LacVietGenealogy.Core.Entities.User", "User")
@@ -655,34 +442,23 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.RoleGroup", b =>
-                {
-                    b.HasOne("LacVietGenealogy.Core.Entities.FamilyTree", "FamilyTree")
-                        .WithMany()
-                        .HasForeignKey("FamilyTreeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("FamilyTree");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.RoleGroupPermission", b =>
+            modelBuilder.Entity("LacVietGenealogy.Core.Entities.RolePermission", b =>
                 {
                     b.HasOne("LacVietGenealogy.Core.Entities.Permission", "Permission")
-                        .WithMany("RoleGroupPermissions")
+                        .WithMany("RolePermissions")
                         .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("LacVietGenealogy.Core.Entities.RoleGroup", "RoleGroup")
-                        .WithMany("RoleGroupPermissions")
-                        .HasForeignKey("RoleGroupId")
+                    b.HasOne("LacVietGenealogy.Core.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Permission");
 
-                    b.Navigation("RoleGroup");
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.SpouseRelationship", b =>
@@ -712,15 +488,31 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Navigation("Wife");
                 });
 
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.SystemMenu", b =>
+            modelBuilder.Entity("LacVietGenealogy.Core.Entities.UserRole", b =>
                 {
-                    b.HasOne("LacVietGenealogy.Core.Entities.SystemModule", "Module")
-                        .WithMany("Menus")
-                        .HasForeignKey("ModuleId")
+                    b.HasOne("LacVietGenealogy.Core.Entities.FamilyTree", "FamilyTree")
+                        .WithMany()
+                        .HasForeignKey("FamilyTreeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Module");
+                    b.HasOne("LacVietGenealogy.Core.Entities.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LacVietGenealogy.Core.Entities.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FamilyTree");
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.FamilyTree", b =>
@@ -741,29 +533,19 @@ namespace LacVietGenealogy.Infrastructure.Migrations
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.Permission", b =>
                 {
-                    b.Navigation("RoleGroupPermissions");
+                    b.Navigation("RolePermissions");
                 });
 
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.RoleGroup", b =>
+            modelBuilder.Entity("LacVietGenealogy.Core.Entities.Role", b =>
                 {
-                    b.Navigation("Memberships");
+                    b.Navigation("RolePermissions");
 
-                    b.Navigation("RoleGroupPermissions");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.SystemMenu", b =>
-                {
-                    b.Navigation("Permissions");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.SystemModule", b =>
-                {
-                    b.Navigation("Menus");
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.User", b =>
                 {
-                    b.Navigation("Memberships");
+                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }
