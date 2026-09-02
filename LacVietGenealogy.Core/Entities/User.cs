@@ -1,4 +1,4 @@
-﻿namespace LacVietGenealogy.Core.Entities;
+namespace LacVietGenealogy.Core.Entities;
 
 public class User
 {
@@ -6,8 +6,10 @@ public class User
     public string Username { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+    public bool MustChangePassword { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public ICollection<FamilyTreeMembership> Memberships { get; set; } = new List<FamilyTreeMembership>();
 }

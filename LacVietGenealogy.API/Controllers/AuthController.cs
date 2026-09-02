@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LacVietGenealogy.Core.Entities;
 using LacVietGenealogy.Core.Interfaces;
@@ -25,8 +25,8 @@ namespace LacVietGenealogy.API.Controllers
 
         public class RegisterRequest
         {
-            public string Username { get; set; } = string.Empty;
             public string Email { get; set; } = string.Empty;
+            public string FullName { get; set; } = string.Empty;
             public string Password { get; set; } = string.Empty;
             public string DefaultFamilyTreeName { get; set; } = string.Empty;
         }
@@ -37,13 +37,11 @@ namespace LacVietGenealogy.API.Controllers
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 return BadRequest(new { message = "Email đã tồn tại." });
 
-            if (await _context.Users.AnyAsync(u => u.Username == request.Username))
-                return BadRequest(new { message = "Username đã tồn tại." });
-
             var user = new User
             {
                 Id = Guid.NewGuid(),
-                Username = request.Username,
+                Username = request.Email, // Use Email as Username
+                FullName = request.FullName,
                 Email = request.Email,
                 PasswordHash = _passwordHasher.Hash(request.Password),
                 IsActive = true,
@@ -51,47 +49,6 @@ namespace LacVietGenealogy.API.Controllers
             };
 
             await _context.Users.AddAsync(user);
-
-            // Tự động tạo 1 gia phả mặc định nếu có tên gia phả trong request
-            var treeName = string.IsNullOrWhiteSpace(request.DefaultFamilyTreeName) 
-                ? $"Gia phả họ {request.Username}" 
-                : request.DefaultFamilyTreeName;
-
-            var familyTree = new FamilyTree
-            {
-                Id = Guid.NewGuid(),
-                Name = treeName,
-                OwnerUserId = user.Id,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _context.FamilyTrees.AddAsync(familyTree);
-
-            // Gán quyền Admin mặc định cho Owner trong dòng họ mới tạo này thông qua FamilyTreeMembership
-            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin")
-                ?? throw new InvalidOperationException("Default Admin role not found. Run DbSeeder first.");
-
-            var membership = new FamilyTreeMembership
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                FamilyTreeId = familyTree.Id,
-                RoleId = adminRole.Id,
-                Status = MembershipStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _context.FamilyTreeMemberships.AddAsync(membership);
-
-            // Thêm bản ghi UserRole để đồng bộ quyền
-            var userRole = new UserRole
-            {
-                UserId = user.Id,
-                RoleId = adminRole.Id,
-                FamilyTreeId = familyTree.Id
-            };
-            await _context.UserRoles.AddAsync(userRole);
-
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Đăng ký thành công.", userId = user.Id });
@@ -142,9 +99,68 @@ namespace LacVietGenealogy.API.Controllers
             {
                 accessToken,
                 refreshToken = refreshTokenStr,
-                user = new { user.Id, user.Username, user.Email },
+                user = new { user.Id, user.Username, user.Email, user.FullName, user.MustChangePassword },
                 familyTrees = memberships
             });
+        }
+
+        public class ForgotPasswordRequest
+        {
+            public string Email { get; set; } = string.Empty;
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, [FromServices] IEmailService emailService)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+            {
+                // Vẫn trả về thành công để tránh dò rỉ email
+                return Ok(new { message = "Nếu email hợp lệ, một mật khẩu tạm thời sẽ được gửi đến bạn." });
+            }
+
+            // Generate temp password
+            var tempPassword = Guid.NewGuid().ToString().Substring(0, 8);
+            
+            user.PasswordHash = _passwordHasher.Hash(tempPassword);
+            user.MustChangePassword = true;
+            
+            await _context.SaveChangesAsync();
+
+            // Send email
+            var subject = "Lạc Việt Gia Phả - Khôi phục mật khẩu";
+            var body = $"<p>Chào {user.FullName},</p><p>Mật khẩu tạm thời của bạn là: <strong>{tempPassword}</strong></p><p>Vui lòng đăng nhập và đổi mật khẩu ngay lập tức.</p>";
+            await emailService.SendEmailAsync(user.Email, subject, body);
+
+            return Ok(new { message = "Nếu email hợp lệ, một mật khẩu tạm thời sẽ được gửi đến bạn." });
+        }
+
+        public class ChangePasswordRequest
+        {
+            public string OldPassword { get; set; } = string.Empty;
+            public string NewPassword { get; set; } = string.Empty;
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+                return Unauthorized();
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            if (!_passwordHasher.Verify(request.OldPassword, user.PasswordHash))
+                return BadRequest(new { message = "Mật khẩu cũ không chính xác." });
+
+            user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+            user.MustChangePassword = false;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đổi mật khẩu thành công." });
         }
 
         public class SelectTreeRequest
@@ -162,15 +178,16 @@ namespace LacVietGenealogy.API.Controllers
 
             // Kiểm tra membership của user trong dòng họ này
             var membership = await _context.FamilyTreeMemberships
-                .Include(m => m.Role)
+                .IgnoreQueryFilters()
+                .Include(m => m.RoleGroup)
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.FamilyTreeId == request.FamilyTreeId && m.Status == MembershipStatus.Active);
 
             if (membership == null)
                 return Forbid("Bạn không có quyền truy cập vào dòng họ này.");
 
             // Lấy danh sách các permissions gán cho Role của user trong dòng họ này
-            var permissions = await _context.RolePermissions
-                .Where(rp => rp.RoleId == membership.RoleId)
+            var permissions = await _context.RoleGroupPermissions
+                .Where(rp => rp.RoleGroupId == membership.RoleGroupId)
                 .Select(rp => rp.Permission.Code)
                 .ToListAsync();
 
@@ -178,12 +195,12 @@ namespace LacVietGenealogy.API.Controllers
             if (user == null) return NotFound();
 
             // JWT#2: Token có chứa thông tin phân quyền và tenant dòng họ
-            var token = _tokenService.CreateFamilyTreeToken(user, request.FamilyTreeId, membership.Role.Name, permissions);
+            var token = _tokenService.CreateFamilyTreeToken(user, request.FamilyTreeId, membership.RoleGroup.Name, permissions);
 
             return Ok(new
             {
                 accessToken = token,
-                role = membership.Role.Name,
+                role = membership.RoleGroup.Name,
                 permissions = permissions
             });
         }
