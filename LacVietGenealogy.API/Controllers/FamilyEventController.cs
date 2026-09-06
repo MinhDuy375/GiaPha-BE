@@ -37,7 +37,8 @@ public class FamilyEventController : ControllerBase
                 item.Description,
                 item.IsRecurringYearly,
                 item.MemberId,
-                MemberName = item.Member == null ? null : item.Member.FullName
+                MemberName = item.Member == null ? null : item.Member.FullName,
+                Images = _context.GalleryImages.Where(image => image.EventId == item.Id).Select(image => new { image.Id, image.FileUrl, image.FileName, image.Caption, image.Notes }).ToList()
             })
             .ToListAsync();
         return Ok(events);
@@ -62,7 +63,7 @@ public class FamilyEventController : ControllerBase
         var familyTreeId = _familyTreeService.FamilyTreeId;
         if (request.MemberId.HasValue && !await _context.Members.AnyAsync(member => member.Id == request.MemberId && member.FamilyTreeId == familyTreeId))
             return BadRequest(new { message = "Thành viên không thuộc cây gia phả hiện tại." });
-        _context.FamilyEvents.Add(new FamilyEvent
+        var item = new FamilyEvent
         {
             FamilyTreeId = familyTreeId,
             MemberId = request.MemberId,
@@ -71,9 +72,27 @@ public class FamilyEventController : ControllerBase
             EventDate = request.EventDate.Date,
             Description = request.Description,
             IsRecurringYearly = request.IsRecurringYearly
-        });
+        };
+        _context.FamilyEvents.Add(item);
         await _context.SaveChangesAsync();
-        return Ok(new { message = "Đã thêm sự kiện." });
+        return Ok(new { message = "Đã thêm sự kiện.", id = item.Id });
+    }
+
+    [HttpPut("{id:guid}")]
+    [Authorize(Policy = "event.manage")]
+    public async Task<IActionResult> UpdateEvent(Guid id, EventRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Title) || request.EventDate == default)
+            return BadRequest(new { message = "Tên và ngày sự kiện không được để trống." });
+        var familyTreeId = _familyTreeService.FamilyTreeId;
+        var item = await _context.FamilyEvents.FirstOrDefaultAsync(eventItem => eventItem.Id == id);
+        if (item == null) return NotFound();
+        if (request.MemberId.HasValue && !await _context.Members.AnyAsync(member => member.Id == request.MemberId && member.FamilyTreeId == familyTreeId))
+            return BadRequest(new { message = "Thành viên không thuộc cây gia phả hiện tại." });
+        item.Title = request.Title.Trim(); item.EventType = request.EventType; item.EventDate = request.EventDate.Date;
+        item.Description = request.Description; item.IsRecurringYearly = request.IsRecurringYearly; item.MemberId = request.MemberId;
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Đã cập nhật sự kiện." });
     }
 
     [HttpDelete("{id:guid}")]
