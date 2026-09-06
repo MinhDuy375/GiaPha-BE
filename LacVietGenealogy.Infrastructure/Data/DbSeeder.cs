@@ -17,7 +17,7 @@ public class DbSeeder
 
     public async Task SeedAsync()
     {
-        await _context.Database.EnsureCreatedAsync();
+        await _context.Database.MigrateAsync();
 
         // 1. Seed Admin User
         var defaultAdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
