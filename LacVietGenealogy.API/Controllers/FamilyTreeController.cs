@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using LacVietGenealogy.Core.Interfaces;
 using LacVietGenealogy.API.Services;
+using Microsoft.Extensions.Logging;
 
 namespace LacVietGenealogy.API.Controllers
 {
@@ -16,11 +17,13 @@ namespace LacVietGenealogy.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ICurrentFamilyTreeService _currentFamilyTree;
+        private readonly ILogger<FamilyTreeController> _logger;
 
-        public FamilyTreeController(AppDbContext context, ICurrentFamilyTreeService currentFamilyTree)
+        public FamilyTreeController(AppDbContext context, ICurrentFamilyTreeService currentFamilyTree, ILogger<FamilyTreeController> logger)
         {
             _context = context;
             _currentFamilyTree = currentFamilyTree;
+            _logger = logger;
         }
 
         public class CreateTreeRequest
@@ -36,13 +39,19 @@ namespace LacVietGenealogy.API.Controllers
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
                 return Unauthorized();
 
+            var joinCode = string.Empty;
+            do
+            {
+                joinCode = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+            } while (await _context.FamilyTrees.AnyAsync(tree => tree.JoinCode == joinCode));
+
             var familyTree = new FamilyTree
             {
                 Id = Guid.NewGuid(),
                 Name = request.Name,
                 Description = request.Description,
                 OwnerUserId = userId,
-                JoinCode = Guid.NewGuid().ToString().Substring(0, 6).ToUpper(), // Mã tham gia gồm 6 ký tự
+                JoinCode = joinCode,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -132,10 +141,13 @@ namespace LacVietGenealogy.API.Controllers
                 return NotFound(new { message = "Mã tham gia không hợp lệ." });
 
             var existingMembership = await _context.FamilyTreeMemberships
+                .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(m => m.UserId == userId && m.FamilyTreeId == tree.Id);
 
-            var memberGroup = await _context.RoleGroups.FirstOrDefaultAsync(r => r.FamilyTreeId == tree.Id && r.Name == "Thành viên thường")
-                ?? throw new InvalidOperationException("Không tìm thấy nhóm quyền mặc định của dòng họ này.");
+            var memberGroup = await _context.RoleGroups
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(r => r.FamilyTreeId == tree.Id && r.Name == "Thành viên thường")
+                ?? await CreateDefaultMemberGroup(tree.Id);
 
             if (existingMembership != null)
             {
@@ -168,6 +180,26 @@ namespace LacVietGenealogy.API.Controllers
             return Ok(new { message = "Đã gửi yêu cầu tham gia. Vui lòng chờ quản trị viên phê duyệt.", familyTreeId = tree.Id, status = membership.Status.ToString() });
         }
 
+        private async Task<RoleGroup> CreateDefaultMemberGroup(Guid familyTreeId)
+        {
+            var group = new RoleGroup
+            {
+                Id = Guid.NewGuid(),
+                FamilyTreeId = familyTreeId,
+                Name = "Thành viên thường",
+                Description = "Quyền xem cơ bản, chờ quản trị viên phân quyền bổ sung"
+            };
+            var viewerPermissions = new[] { "member_list.view", "tree_view.view", "event.view", "kinship.view", "gallery.view", "relationship.view", "statistics.view" };
+            var permissions = await _context.Permissions
+                .Where(permission => viewerPermissions.Contains(permission.Code))
+                .ToListAsync();
+            foreach (var permission in permissions)
+                group.RoleGroupPermissions.Add(new RoleGroupPermission { RoleGroupId = group.Id, PermissionId = permission.Id });
+            await _context.RoleGroups.AddAsync(group);
+            await _context.SaveChangesAsync();
+            return group;
+        }
+
         [HttpGet("current")]
         [Authorize(Policy = "membership.view")]
         public async Task<IActionResult> GetCurrentFamilyTree()
@@ -175,6 +207,26 @@ namespace LacVietGenealogy.API.Controllers
             var treeId = _currentFamilyTree.FamilyTreeId;
             var tree = await _context.FamilyTrees.FirstOrDefaultAsync(item => item.Id == treeId);
             return tree == null ? NotFound() : Ok(new { tree.Id, tree.Name, tree.Description, tree.JoinCode, tree.CreatedAt });
+        }
+
+        [HttpGet("my-join-requests")]
+        public async Task<IActionResult> GetMyJoinRequests()
+        {
+            var userId = GetUserId();
+            var requests = await _context.FamilyTreeMemberships
+                .IgnoreQueryFilters()
+                .Where(item => item.UserId == userId && (item.Status == MembershipStatus.Pending || item.Status == MembershipStatus.Rejected))
+                .Select(item => new
+                {
+                    item.FamilyTreeId,
+                    FamilyTreeName = item.FamilyTree.Name,
+                    item.Status,
+                    StatusText = item.Status.ToString(),
+                    item.CreatedAt
+                })
+                .OrderByDescending(item => item.CreatedAt)
+                .ToListAsync();
+            return Ok(requests);
         }
 
         [HttpGet("join-requests")]
@@ -230,14 +282,21 @@ namespace LacVietGenealogy.API.Controllers
 
         [HttpPut("join-requests/{id:guid}/reject")]
         [Authorize(Policy = "membership.manage")]
-        public async Task<IActionResult> RejectJoinRequest(Guid id)
+        public async Task<IActionResult> RejectJoinRequest(Guid id, [FromServices] IEmailService emailService)
         {
             var treeId = _currentFamilyTree.FamilyTreeId;
             var membership = await _context.FamilyTreeMemberships.IgnoreQueryFilters()
+                .Include(item => item.User)
+                .Include(item => item.FamilyTree)
                 .FirstOrDefaultAsync(item => item.Id == id && item.FamilyTreeId == treeId && item.Status == MembershipStatus.Pending);
             if (membership == null) return NotFound(new { message = "Không tìm thấy yêu cầu tham gia." });
             membership.Status = MembershipStatus.Rejected;
             await _context.SaveChangesAsync();
+
+            var subject = $"Lạc Việt Gia Phả - Yêu cầu tham gia {membership.FamilyTree.Name}";
+            var body = $"<p>Chào {membership.User.FullName},</p><p>Yêu cầu tham gia gia phả <strong>{membership.FamilyTree.Name}</strong> của bạn đã bị từ chối.</p><p>Bạn có thể liên hệ quản trị viên để biết thêm chi tiết.</p>";
+            var emailSent = await emailService.SendEmailAsync(membership.User.Email, subject, body);
+            _logger.LogInformation("Join rejection email result for {Email}, FamilyTreeId={FamilyTreeId}: Sent={EmailSent}", membership.User.Email, treeId, emailSent);
             return Ok(new { message = "Đã từ chối yêu cầu." });
         }
 

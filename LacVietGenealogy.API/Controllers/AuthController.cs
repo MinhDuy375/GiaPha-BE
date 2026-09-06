@@ -15,12 +15,14 @@ namespace LacVietGenealogy.API.Controllers
         private readonly AppDbContext _context;
         private readonly IPasswordHasher _passwordHasher;
         private readonly ITokenService _tokenService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(AppDbContext context, IPasswordHasher passwordHasher, ITokenService tokenService)
+        public AuthController(AppDbContext context, IPasswordHasher passwordHasher, ITokenService tokenService, ILogger<AuthController> logger)
         {
             _context = context;
             _passwordHasher = passwordHasher;
             _tokenService = tokenService;
+            _logger = logger;
         }
 
         public class RegisterRequest
@@ -63,7 +65,7 @@ namespace LacVietGenealogy.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => 
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
                 u.Email == request.EmailOrUsername || u.Username == request.EmailOrUsername);
 
             if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
@@ -91,8 +93,23 @@ namespace LacVietGenealogy.API.Controllers
 
             // Lấy danh sách dòng họ mà user thuộc về để FE hiển thị lựa chọn
             var memberships = await _context.FamilyTreeMemberships
+                .IgnoreQueryFilters()
                 .Where(m => m.UserId == user.Id && m.Status == MembershipStatus.Active)
                 .Select(m => new { m.FamilyTreeId, m.FamilyTree.Name })
+                .ToListAsync();
+
+            var joinRequests = await _context.FamilyTreeMemberships
+                .IgnoreQueryFilters()
+                .Where(m => m.UserId == user.Id && (m.Status == MembershipStatus.Pending || m.Status == MembershipStatus.Rejected))
+                .Select(m => new
+                {
+                    m.FamilyTreeId,
+                    FamilyTreeName = m.FamilyTree.Name,
+                    JoinCode = m.FamilyTree.JoinCode,
+                    Status = m.Status.ToString(),
+                    m.CreatedAt
+                })
+                .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();
 
             return Ok(new
@@ -100,7 +117,8 @@ namespace LacVietGenealogy.API.Controllers
                 accessToken,
                 refreshToken = refreshTokenStr,
                 user = new { user.Id, user.Username, user.Email, user.FullName, user.MustChangePassword },
-                familyTrees = memberships
+                familyTrees = memberships,
+                joinRequests
             });
         }
 
@@ -121,16 +139,19 @@ namespace LacVietGenealogy.API.Controllers
 
             // Generate temp password
             var tempPassword = Guid.NewGuid().ToString().Substring(0, 8);
-            
-            user.PasswordHash = _passwordHasher.Hash(tempPassword);
-            user.MustChangePassword = true;
-            
-            await _context.SaveChangesAsync();
 
             // Send email
             var subject = "Lạc Việt Gia Phả - Khôi phục mật khẩu";
             var body = $"<p>Chào {user.FullName},</p><p>Mật khẩu tạm thời của bạn là: <strong>{tempPassword}</strong></p><p>Vui lòng đăng nhập và đổi mật khẩu ngay lập tức.</p>";
-            await emailService.SendEmailAsync(user.Email, subject, body);
+            var emailSent = await emailService.SendEmailAsync(user.Email, subject, body);
+            _logger.LogInformation("Password recovery email result for {Email}: Sent={EmailSent}", user.Email, emailSent);
+
+            if (!emailSent)
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = "Không thể gửi email khôi phục. Máy chủ email có thể đã vượt giới hạn gửi, mật khẩu của bạn chưa bị thay đổi." });
+
+            user.PasswordHash = _passwordHasher.Hash(tempPassword);
+            user.MustChangePassword = true;
+            await _context.SaveChangesAsync();
 
             return Ok(new { message = "Nếu email hợp lệ, một mật khẩu tạm thời sẽ được gửi đến bạn." });
         }

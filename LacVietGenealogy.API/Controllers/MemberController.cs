@@ -114,6 +114,7 @@ namespace LacVietGenealogy.API.Controllers
                 .Where(r => r.FamilyTreeId == familyTreeId)
                 .Select(r => new
                 {
+                    id = r.Id.ToString(),
                     person_a = r.ParentId.ToString(),
                     person_b = r.ChildId.ToString(),
                     type = r.RelationshipType == 1 ? "adopted_child" : "biological_child",
@@ -126,6 +127,7 @@ namespace LacVietGenealogy.API.Controllers
                 .Where(r => r.FamilyTreeId == familyTreeId)
                 .Select(r => new
                 {
+                    id = r.Id.ToString(),
                     person_a = r.HusbandId.ToString(),
                     person_b = r.WifeId.ToString(),
                     type = "marriage",

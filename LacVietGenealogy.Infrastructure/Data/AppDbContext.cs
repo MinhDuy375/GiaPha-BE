@@ -199,6 +199,12 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<GalleryImage>()
+            .HasOne(image => image.Event)
+            .WithMany()
+            .HasForeignKey(image => image.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GalleryImage>()
             .HasQueryFilter(image => image.FamilyTreeId == _currentFamilyTreeService.FamilyTreeId);
     }
 }
