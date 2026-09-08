@@ -1,4 +1,5 @@
-﻿# 📖 LacVietGiaPha — Project Status & Working Standard
+﻿
+# 📖 LacVietGiaPha — Project Status & Working Standard
 
 > **File này là nguồn chuẩn duy nhất (single source of truth)** để bất kỳ trợ lý AI/dev nào tham gia dự án đọc trước khi làm việc.
 > Mục đích: tránh phải mô tả lại cấu trúc dự án mỗi lần bắt đầu phiên làm việc mới.
