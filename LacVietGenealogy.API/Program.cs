@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using LacVietGenealogy.API.Authorization;
 using LacVietGenealogy.API.Services;
 using LacVietGenealogy.Core.Interfaces;
@@ -17,7 +17,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Lac Viet Genealogy API", Version = "v1" });
-    
+
     // Thêm định nghĩa bảo mật JWT vào Swagger
     c.AddSecurityDefinition("Bearer", new()
     {
@@ -50,6 +50,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentFamilyTreeService, CurrentFamilyTreeService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<DbSeeder>();
 
 // Config Database Connection
@@ -58,7 +59,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Authentication & JWT Config
-var jwtSecret = builder.Configuration["Jwt:Secret"] 
+var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("Jwt:Secret is not configured.");
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
@@ -87,12 +88,14 @@ builder.Services.AddAuthentication(options =>
 // Dynamic Permission Policies
 var permissionsList = new[]
 {
-    "member.view", "member.create", "member.edit", "member.delete",
-    "tree.view", "tree.edit", "tree.export",
-    "data.import", "data.approve",
-    "user.invite", "user.remove",
-    "membership.view", "membership.manage",
-    "role.manage"
+    "member_list.view", "member_list.create", "member_list.edit", "member_list.delete",
+    "tree_view.view", "tree_view.export",
+    "event.view", "event.manage",
+    "kinship.view", "gallery.view", "gallery.manage",
+    "relationship.view", "relationship.manage", "statistics.view",
+    "membership.view", "membership.manage", "membership.code.view",
+    "role_group.view", "role_group.manage",
+    "user.view", "user.manage"
 };
 
 builder.Services.AddAuthorization(options =>
@@ -110,13 +113,16 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy => policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins("http://localhost:5173", "http://localhost:5174")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
 });
 
 var app = builder.Build();
+
+var avatarRoot = Path.Combine(app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot"), "uploads", "avatars");
+Directory.CreateDirectory(avatarRoot);
 
 // Seed Database on startup (Development)
 using (var scope = app.Services.CreateScope())
@@ -141,6 +147,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();

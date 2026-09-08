@@ -4,6 +4,7 @@ using LacVietGenealogy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LacVietGenealogy.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260902122035_AddFamilyEvents")]
+    partial class AddFamilyEvents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,49 +128,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("FamilyTreeMemberships");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.GalleryImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Caption")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid?>("EventId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("FamilyTreeId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("FileUrl")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid?>("MemberId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EventId");
-
-                    b.HasIndex("FamilyTreeId");
-
-                    b.HasIndex("MemberId");
-
-                    b.ToTable("GalleryImages");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.Member", b =>
@@ -443,10 +403,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<Guid>("ModuleId")
                         .HasColumnType("char(36)");
 
@@ -580,31 +536,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Navigation("RoleGroup");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LacVietGenealogy.Core.Entities.GalleryImage", b =>
-                {
-                    b.HasOne("LacVietGenealogy.Core.Entities.FamilyEvent", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("LacVietGenealogy.Core.Entities.FamilyTree", "FamilyTree")
-                        .WithMany()
-                        .HasForeignKey("FamilyTreeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LacVietGenealogy.Core.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Event");
-
-                    b.Navigation("FamilyTree");
-
-                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.Member", b =>

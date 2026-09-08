@@ -16,28 +16,59 @@ public class AppDbContext : DbContext
 
     // ── DbSets ──────────────────────────────────────────────────────────────
     public DbSet<User> Users => Set<User>();
-    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<SystemModule> SystemModules => Set<SystemModule>();
+    public DbSet<SystemMenu> SystemMenus => Set<SystemMenu>();
     public DbSet<Permission> Permissions => Set<Permission>();
-    public DbSet<UserRole> UserRoles => Set<UserRole>();
-    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<RoleGroup> RoleGroups => Set<RoleGroup>();
+    public DbSet<RoleGroupPermission> RoleGroupPermissions => Set<RoleGroupPermission>();
     public DbSet<FamilyTree> FamilyTrees => Set<FamilyTree>();
     public DbSet<FamilyTreeMembership> FamilyTreeMemberships => Set<FamilyTreeMembership>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Member> Members => Set<Member>();
     public DbSet<ParentChildRelationship> ParentChildRelationships => Set<ParentChildRelationship>();
     public DbSet<SpouseRelationship> SpouseRelationships => Set<SpouseRelationship>();
+    public DbSet<FamilyEvent> FamilyEvents => Set<FamilyEvent>();
+    public DbSet<GalleryImage> GalleryImages => Set<GalleryImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // ── UserRole (composite PK) ──────────────────────────────────────────
-        modelBuilder.Entity<UserRole>()
-            .HasKey(ur => new { ur.UserId, ur.RoleId, ur.FamilyTreeId });
+        // ── RoleGroupPermission (composite PK) ────────────────────────────────
+        modelBuilder.Entity<RoleGroupPermission>()
+            .HasKey(rp => new { rp.RoleGroupId, rp.PermissionId });
 
-        // ── RolePermission (composite PK) ───────────────────────────────────
-        modelBuilder.Entity<RolePermission>()
-            .HasKey(rp => new { rp.RoleId, rp.PermissionId });
+        modelBuilder.Entity<RoleGroupPermission>()
+            .HasOne(rp => rp.RoleGroup)
+            .WithMany(rg => rg.RoleGroupPermissions)
+            .HasForeignKey(rp => rp.RoleGroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RoleGroupPermission>()
+            .HasOne(rp => rp.Permission)
+            .WithMany(p => p.RoleGroupPermissions)
+            .HasForeignKey(rp => rp.PermissionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── SystemMenu & SystemModule ─────────────────────────────────────────
+        modelBuilder.Entity<SystemMenu>()
+            .HasOne(m => m.Module)
+            .WithMany(md => md.Menus)
+            .HasForeignKey(m => m.ModuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Permission>()
+            .HasOne(p => p.Menu)
+            .WithMany(m => m.Permissions)
+            .HasForeignKey(p => p.MenuId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ── RoleGroup ────────────────────────────────────────────────────────
+        modelBuilder.Entity<RoleGroup>()
+            .HasOne(rg => rg.FamilyTree)
+            .WithMany()
+            .HasForeignKey(rg => rg.FamilyTreeId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ── FamilyTree ───────────────────────────────────────────────────────
         modelBuilder.Entity<FamilyTree>()
@@ -53,7 +84,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<FamilyTreeMembership>()
             .HasOne(m => m.User)
-            .WithMany()
+            .WithMany(u => u.Memberships)
             .HasForeignKey(m => m.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -64,9 +95,9 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<FamilyTreeMembership>()
-            .HasOne(m => m.Role)
-            .WithMany()
-            .HasForeignKey(m => m.RoleId)
+            .HasOne(m => m.RoleGroup)
+            .WithMany(rg => rg.Memberships)
+            .HasForeignKey(m => m.RoleGroupId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<FamilyTreeMembership>()
@@ -115,6 +146,18 @@ public class AppDbContext : DbContext
             .HasForeignKey(s => s.HusbandId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<FamilyEvent>()
+            .HasOne(e => e.FamilyTree)
+            .WithMany()
+            .HasForeignKey(e => e.FamilyTreeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<FamilyEvent>()
+            .HasOne(e => e.Member)
+            .WithMany()
+            .HasForeignKey(e => e.MemberId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<SpouseRelationship>()
             .HasOne(s => s.Wife)
             .WithMany(m => m.WifeEdges)
@@ -128,7 +171,6 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         // ── Global Query Filters (Bảo mật multi-tenant) ─────────────────────
-        // Dùng lambda capture để EF Core evaluate lazily mỗi request
         modelBuilder.Entity<Member>()
             .HasQueryFilter(m => m.FamilyTreeId == _currentFamilyTreeService.FamilyTreeId);
 
@@ -137,5 +179,32 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<SpouseRelationship>()
             .HasQueryFilter(s => s.FamilyTreeId == _currentFamilyTreeService.FamilyTreeId);
+
+        modelBuilder.Entity<RoleGroup>()
+            .HasQueryFilter(rg => rg.FamilyTreeId == _currentFamilyTreeService.FamilyTreeId);
+
+        modelBuilder.Entity<FamilyEvent>()
+            .HasQueryFilter(e => e.FamilyTreeId == _currentFamilyTreeService.FamilyTreeId);
+
+        modelBuilder.Entity<GalleryImage>()
+            .HasOne(image => image.FamilyTree)
+            .WithMany()
+            .HasForeignKey(image => image.FamilyTreeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GalleryImage>()
+            .HasOne(image => image.Member)
+            .WithMany()
+            .HasForeignKey(image => image.MemberId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<GalleryImage>()
+            .HasOne(image => image.Event)
+            .WithMany()
+            .HasForeignKey(image => image.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GalleryImage>()
+            .HasQueryFilter(image => image.FamilyTreeId == _currentFamilyTreeService.FamilyTreeId);
     }
 }
