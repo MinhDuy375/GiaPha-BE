@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using LacVietGenealogy.Core.Interfaces;
@@ -21,7 +21,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
             .Build();
 
         var connectionString = config.GetConnectionString("DefaultConnection")
-            ?? "Server=127.0.0.1;Port=3306;Database=lacviet_giapha;User=root;Password=duy3725;";
+            ?? "Server=127.0.0.1;Port=3306;Database=lacviet_giapha;User=root;Password=123456;";
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         

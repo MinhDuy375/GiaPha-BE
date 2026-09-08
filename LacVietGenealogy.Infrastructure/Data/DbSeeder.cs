@@ -64,6 +64,7 @@ public class DbSeeder
         var menuGalleryId = Guid.Parse("B0000000-0000-0000-0000-000000000007");
         var menuRelationshipId = Guid.Parse("B0000000-0000-0000-0000-000000000008");
         var menuStatisticsId = Guid.Parse("B0000000-0000-0000-0000-000000000009");
+        var menuUserManageId = Guid.Parse("B0000000-0000-0000-0000-000000000010");
 
         var menus = new List<SystemMenu>
         {
@@ -75,7 +76,8 @@ public class DbSeeder
             new() { Id = menuKinshipId, ModuleId = moduleMemberId, Name = "Tra cứu danh xưng", Alias = "kinship", Icon = "link" },
             new() { Id = menuGalleryId, ModuleId = moduleMemberId, Name = "Thư viện dòng họ", Alias = "gallery", Icon = "images" },
             new() { Id = menuRelationshipId, ModuleId = moduleMemberId, Name = "Quản lý quan hệ", Alias = "relationships", Icon = "link" },
-            new() { Id = menuStatisticsId, ModuleId = moduleTreeId, Name = "Thống kê dòng họ", Alias = "statistics", Icon = "chart" }
+            new() { Id = menuStatisticsId, ModuleId = moduleTreeId, Name = "Thống kê dòng họ", Alias = "statistics", Icon = "chart" },
+            new() { Id = menuUserManageId, ModuleId = moduleSystemId, Name = "Quản lý người dùng", Alias = "user_manage", Icon = "user-shield" }
         };
 
         foreach (var m in menus)
@@ -113,6 +115,8 @@ public class DbSeeder
             ,new() { Id = Guid.NewGuid(), MenuId = menuRelationshipId, Code = "relationship.view", Name = "Xem quan hệ" }
             ,new() { Id = Guid.NewGuid(), MenuId = menuRelationshipId, Code = "relationship.manage", Name = "Quản lý quan hệ" }
             ,new() { Id = Guid.NewGuid(), MenuId = menuStatisticsId, Code = "statistics.view", Name = "Xem thống kê" }
+            ,new() { Id = Guid.NewGuid(), MenuId = menuUserManageId, Code = "user.view", Name = "Xem danh sách người dùng" }
+            ,new() { Id = Guid.NewGuid(), MenuId = menuUserManageId, Code = "user.manage", Name = "Quản lý người dùng" }
         };
 
         foreach (var p in permissions)
@@ -124,7 +128,7 @@ public class DbSeeder
         await _context.SaveChangesAsync();
 
         var eventPermissions = await _context.Permissions
-            .Where(permission => permission.Code == "event.view" || permission.Code == "event.manage" || permission.Code == "kinship.view" || permission.Code == "gallery.view" || permission.Code == "gallery.manage" || permission.Code == "membership.code.view" || permission.Code == "relationship.view" || permission.Code == "relationship.manage" || permission.Code == "statistics.view")
+            .Where(permission => permission.Code == "event.view" || permission.Code == "event.manage" || permission.Code == "kinship.view" || permission.Code == "gallery.view" || permission.Code == "gallery.manage" || permission.Code == "membership.code.view" || permission.Code == "relationship.view" || permission.Code == "relationship.manage" || permission.Code == "statistics.view" || permission.Code == "user.view" || permission.Code == "user.manage")
             .ToListAsync();
         var existingGroups = await _context.RoleGroups
             .IgnoreQueryFilters()
@@ -137,7 +141,7 @@ public class DbSeeder
                 ? new[] { "event.view", "kinship.view", "gallery.view", "relationship.view", "statistics.view" }
                 : group.Name == "Người biên tập"
                     ? new[] { "event.view", "event.manage", "kinship.view", "gallery.view", "gallery.manage", "relationship.view", "relationship.manage", "statistics.view" }
-                    : eventPermissions.Select(permission => permission.Code).ToArray();
+                    : eventPermissions.Select(permission => permission.Code).ToArray(); // Quản trị viên: tất cả
             foreach (var permission in eventPermissions.Where(permission => allowedCodes.Contains(permission.Code) && group.RoleGroupPermissions.All(link => link.PermissionId != permission.Id)))
                 group.RoleGroupPermissions.Add(new RoleGroupPermission { RoleGroupId = group.Id, PermissionId = permission.Id });
         }
