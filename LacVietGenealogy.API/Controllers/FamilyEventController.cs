@@ -38,6 +38,14 @@ public class FamilyEventController : ControllerBase
                 item.IsRecurringYearly,
                 item.MemberId,
                 MemberName = item.Member == null ? null : item.Member.FullName,
+                MemberBirthDateLunar = item.Member == null ? null : item.Member.BirthDateLunar,
+                MemberBirthLunarDay = item.Member == null ? null : item.Member.BirthLunarDay,
+                MemberBirthLunarMonth = item.Member == null ? null : item.Member.BirthLunarMonth,
+                MemberBirthLunarYear = item.Member == null ? null : item.Member.BirthLunarYear,
+                MemberDeathDateLunar = item.Member == null ? null : item.Member.DeathDateLunar,
+                MemberDeathLunarDay = item.Member == null ? null : item.Member.DeathLunarDay,
+                MemberDeathLunarMonth = item.Member == null ? null : item.Member.DeathLunarMonth,
+                MemberDeathLunarYear = item.Member == null ? null : item.Member.DeathLunarYear,
                 Images = _context.GalleryImages.Where(image => image.EventId == item.Id).Select(image => new { image.Id, image.FileUrl, image.FileName, image.Caption, image.Notes }).ToList()
             })
             .ToListAsync();
