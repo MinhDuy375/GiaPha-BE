@@ -94,7 +94,8 @@ var permissionsList = new[]
     "kinship.view", "gallery.view", "gallery.manage",
     "relationship.view", "relationship.manage", "statistics.view",
     "membership.view", "membership.manage", "membership.code.view",
-    "role_group.view", "role_group.manage"
+    "role_group.view", "role_group.manage",
+    "user.view", "user.manage"
 };
 
 builder.Services.AddAuthorization(options =>
@@ -112,7 +113,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy => policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins("http://localhost:5173", "http://localhost:5174")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
