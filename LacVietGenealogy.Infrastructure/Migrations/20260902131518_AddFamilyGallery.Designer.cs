@@ -4,6 +4,7 @@ using LacVietGenealogy.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LacVietGenealogy.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260902131518_AddFamilyGallery")]
+    partial class AddFamilyGallery
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -139,9 +142,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid?>("EventId")
-                        .HasColumnType("char(36)");
-
                     b.Property<Guid>("FamilyTreeId")
                         .HasColumnType("char(36)");
 
@@ -160,8 +160,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EventId");
 
                     b.HasIndex("FamilyTreeId");
 
@@ -443,10 +441,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<Guid>("ModuleId")
                         .HasColumnType("char(36)");
 
@@ -584,11 +578,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
 
             modelBuilder.Entity("LacVietGenealogy.Core.Entities.GalleryImage", b =>
                 {
-                    b.HasOne("LacVietGenealogy.Core.Entities.FamilyEvent", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("LacVietGenealogy.Core.Entities.FamilyTree", "FamilyTree")
                         .WithMany()
                         .HasForeignKey("FamilyTreeId")
@@ -599,8 +588,6 @@ namespace LacVietGenealogy.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("MemberId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Event");
 
                     b.Navigation("FamilyTree");
 
