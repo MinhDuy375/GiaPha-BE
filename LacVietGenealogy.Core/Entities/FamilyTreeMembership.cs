@@ -1,6 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace LacVietGenealogy.Core.Entities
 {
-    public enum MembershipStatus { Pending, Active, Blocked }
+    public enum MembershipStatus { Pending, Active, Rejected, Suspended }
 
     public class FamilyTreeMembership
     {
@@ -12,16 +14,15 @@ namespace LacVietGenealogy.Core.Entities
         public Guid FamilyTreeId { get; set; }
         public FamilyTree FamilyTree { get; set; } = null!;
 
-        public Guid RoleId { get; set; }
-        public Role Role { get; set; } = null!;
+        public Guid RoleGroupId { get; set; }
+        public RoleGroup RoleGroup { get; set; } = null!;
 
         public MembershipStatus Status { get; set; } = MembershipStatus.Pending;
 
-        /// <summary>
-        /// Liên kết với node Member trong cây (dùng cho tính năng "claim node").
-        /// Nullable: user có thể chưa được gắn với node nào.
-        /// </summary>
+        // Optional: Liên kết với bản ghi Member trong gia phả
         public Guid? LinkedMemberId { get; set; }
+        
+        [JsonIgnore]
         public Member? LinkedMember { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
