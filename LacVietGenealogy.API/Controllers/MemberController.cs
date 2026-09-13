@@ -62,7 +62,8 @@ namespace LacVietGenealogy.API.Controllers
                     m.Note,
                     m.PhoneNumber,
                     m.Occupation,
-                    m.CurrentResidence
+                    m.CurrentResidence,
+                    m.BurialLocation
                 })
                 .ToListAsync();
 
@@ -167,6 +168,7 @@ namespace LacVietGenealogy.API.Controllers
             public string? PhoneNumber { get; set; }
             public string? Occupation { get; set; }
             public string? CurrentResidence { get; set; }
+            public string? BurialLocation { get; set; }
             public string? AvatarUrl { get; set; }
             public int GenerationLevel { get; set; } = 1;
             // Quan hệ cha-mẹ
@@ -222,6 +224,7 @@ namespace LacVietGenealogy.API.Controllers
                 PhoneNumber = request.PhoneNumber,
                 Occupation = request.Occupation,
                 CurrentResidence = request.CurrentResidence,
+                BurialLocation = request.BurialLocation,
                 AvatarUrl = request.AvatarUrl,
             };
 
@@ -310,6 +313,7 @@ namespace LacVietGenealogy.API.Controllers
             member.PhoneNumber = request.PhoneNumber;
             member.Occupation = request.Occupation;
             member.CurrentResidence = request.CurrentResidence;
+            member.BurialLocation = request.BurialLocation;
             member.AvatarUrl = request.AvatarUrl;
 
             await _context.SaveChangesAsync();

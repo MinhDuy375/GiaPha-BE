@@ -1,4 +1,4 @@
-﻿namespace LacVietGenealogy.Core.Entities;
+namespace LacVietGenealogy.Core.Entities;
 
 public class Member
 {
@@ -38,6 +38,7 @@ public class Member
     public string? PhoneNumber { get; set; }
     public string? Occupation { get; set; }
     public string? CurrentResidence { get; set; }
+    public string? BurialLocation { get; set; } // Link/tọa độ nơi chôn cất
 
     public ICollection<ParentChildRelationship> ParentEdges { get; set; } = new List<ParentChildRelationship>();
     public ICollection<ParentChildRelationship> ChildEdges { get; set; } = new List<ParentChildRelationship>();
