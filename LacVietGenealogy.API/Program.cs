@@ -113,7 +113,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy => policy
-            .WithOrigins("http://localhost:5173", "http://localhost:5174")
+            .WithOrigins(
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "capacitor://localhost",  // Capacitor Android
+                "http://localhost"        // Capacitor fallback
+            )
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
