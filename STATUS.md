@@ -65,6 +65,11 @@ LacVietGiaPha/
    - Thêm nút thêm/sửa thành viên trực tiếp từ node trên cây.
 2. **Thuật toán xưng hô (Kinship algorithm):**
    - Xây dựng thuật toán tính toán mối quan hệ họ hàng giữa hai người bất kỳ trên cây (VD: chú, bác, cô, dì, anh em họ, cháu đích tôn...) dựa trên khoảng cách thế hệ và nhánh.
+3. **Chatbot gia phả (đang triển khai):**
+   - Hoàn thành DTO request/response, service truy vấn gia phả theo FamilyTreeId.
+   - Hoàn thành AI intent extraction bằng Gemini fallback heuristic, service hướng dẫn và orchestrator ChatService.
+   - Hoàn thành controller ChatController, entity ChatConversation/ChatMessage và đăng ký DbSet/EF mapping.
+   - Tiếp theo: test API end-to-end qua Swagger/Postman với JWT và FamilyTreeId hợp lệ.
 
 ---
 

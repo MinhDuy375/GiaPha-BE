@@ -1,6 +1,7 @@
 using System.Text;
 using LacVietGenealogy.API.Authorization;
 using LacVietGenealogy.API.Services;
+using LacVietGenealogy.API.Services.Interfaces;
 using LacVietGenealogy.Core.Interfaces;
 using LacVietGenealogy.Infrastructure.Data;
 using LacVietGenealogy.Infrastructure.Services;
@@ -14,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpClient(nameof(GeminiAIService));
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Lac Viet Genealogy API", Version = "v1" });
@@ -48,6 +50,10 @@ builder.Services.AddHttpContextAccessor();
 
 // DI Services
 builder.Services.AddScoped<ICurrentFamilyTreeService, CurrentFamilyTreeService>();
+builder.Services.AddScoped<IGenealogyService, GenealogyService>();
+builder.Services.AddScoped<IAIService, GeminiAIService>();
+builder.Services.AddScoped<IHelpService, HelpService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
@@ -95,7 +101,8 @@ var permissionsList = new[]
     "relationship.view", "relationship.manage", "statistics.view",
     "membership.view", "membership.manage", "membership.code.view",
     "role_group.view", "role_group.manage",
-    "user.view", "user.manage"
+    "user.view", "user.manage",
+    "chatbot.view", "chatbot.manage"
 };
 
 builder.Services.AddAuthorization(options =>

@@ -29,6 +29,8 @@ public class AppDbContext : DbContext
     public DbSet<SpouseRelationship> SpouseRelationships => Set<SpouseRelationship>();
     public DbSet<FamilyEvent> FamilyEvents => Set<FamilyEvent>();
     public DbSet<GalleryImage> GalleryImages => Set<GalleryImage>();
+    public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -105,6 +107,25 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(m => m.LinkedMemberId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // ── ChatConversation & ChatMessage ───────────────────────────────────
+        modelBuilder.Entity<ChatConversation>()
+            .HasOne(c => c.User)
+            .WithMany()
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChatConversation>()
+            .HasOne(c => c.FamilyTree)
+            .WithMany()
+            .HasForeignKey(c => c.FamilyTreeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasOne(m => m.Conversation)
+            .WithMany(c => c.Messages)
+            .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // ── RefreshToken ─────────────────────────────────────────────────────
         modelBuilder.Entity<RefreshToken>()
