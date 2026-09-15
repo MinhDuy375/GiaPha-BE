@@ -145,7 +145,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.MapGet("/health", () => Results.Ok("OK"));
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors("AllowFrontend");
