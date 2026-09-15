@@ -20,7 +20,6 @@ public class ChatController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "chatbot.view")]
     public async Task<IActionResult> Post([FromBody] ChatRequest request, CancellationToken cancellationToken)
     {
         if (request is null || string.IsNullOrWhiteSpace(request.Message))

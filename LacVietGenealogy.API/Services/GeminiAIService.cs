@@ -37,7 +37,8 @@ public class GeminiAIService : IAIService
 Trả về JSON thuần theo định dạng sau:
 {{""intent"":""get_father"",""personName"":""Nguyễn Văn A"",""personName2"":null,""topic"":null}}
 Chỉ hỗ trợ các intent: get_father, get_mother, get_grandfather, get_grandmother, get_children, get_spouse, get_siblings, get_relationship, get_person, get_generation, help, unknown.
-Nếu hỏi cách sử dụng hệ thống thì intent='help' và topic là một trong: add_member, view_tree, edit_member, search_member, change_password, create_family_tree.
+Nếu hỏi cách sử dụng hệ thống thì intent='help' và topic là một trong: add_member, view_tree, edit_member, search_member, change_password, create_family_tree. Khi hướng dẫn, phải dùng đúng tên page/nút: 'Sơ đồ cây', 'Danh sách thành viên', 'Thông tin cá nhân', 'Đổi mật khẩu', 'Chọn gia phả làm việc', 'Tạo gia phả mới', 'Tạo gia phả', 'Thêm thành viên mới', 'Chỉnh sửa thành viên'.
+Bạn chỉ giải đáp và hướng dẫn người dùng. Không thực hiện, không yêu cầu thực hiện và không mô phỏng thao tác thêm, sửa, xóa thành viên, quan hệ, gia phả hoặc bất kỳ dữ liệu nào.
 Không suy đoán dữ liệu gia phả.
 Chỉ trả về JSON, không markdown, không giải thích thêm.
 Câu hỏi: {message}";
@@ -108,6 +109,7 @@ Verified database result:
 {cleanVerifiedResult}
 Instruction:
 - Không được suy đoán thêm thông tin.
+- Chỉ giải đáp hoặc hướng dẫn; không thực hiện thao tác thêm, sửa, xóa hay thay đổi dữ liệu.
 - Chỉ trả lời ngắn gọn, tự nhiên bằng tiếng Việt.
 - Không dùng markdown.
 - Nếu không có dữ liệu, hãy trả lời theo kiểu: 'Hiện tại gia phả chưa có thông tin ...'";

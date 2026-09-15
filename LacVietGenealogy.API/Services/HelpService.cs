@@ -6,12 +6,12 @@ public class HelpService : IHelpService
 {
     private readonly Dictionary<string, string> _helpMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["add_member"] = "Vào Thành viên → Thêm thành viên → nhập thông tin → nhấn Lưu.",
-        ["view_tree"] = "Vào Cây gia phả để xem sơ đồ quan hệ của dòng họ.",
-        ["edit_member"] = "Mở thông tin thành viên → chọn Chỉnh sửa → cập nhật thông tin → Lưu.",
-        ["search_member"] = "Sử dụng ô tìm kiếm ở màn hình danh sách thành viên để tìm theo tên.",
-        ["change_password"] = "Vào Tài khoản → Đổi mật khẩu → nhập mật khẩu cũ và mật khẩu mới → Xác nhận.",
-        ["create_family_tree"] = "Vào Quản lý dòng họ → Tạo gia phả mới → nhập tên và lưu lại.",
+        ["add_member"] = "Vào Sơ đồ cây → chọn Thêm thành viên mới → nhập thông tin → nhấn Lưu.",
+        ["view_tree"] = "Vào Sơ đồ cây để xem sơ đồ quan hệ của dòng họ.",
+        ["edit_member"] = "Vào Sơ đồ cây → chọn thành viên → chọn Chỉnh sửa thành viên → cập nhật thông tin → nhấn Lưu.",
+        ["search_member"] = "Vào Danh sách thành viên → nhập tên vào ô Tìm tên thành viên để tra cứu.",
+        ["change_password"] = "Vào Thông tin cá nhân → chọn Đổi mật khẩu → nhập Mật khẩu hiện tại, Mật khẩu mới và Xác nhận mật khẩu mới → nhấn Đổi mật khẩu.",
+        ["create_family_tree"] = "Vào Chọn gia phả làm việc → chọn Tạo gia phả mới → nhập Tên gia phả / Dòng họ → nhấn Tạo gia phả.",
         ["general"] = "Bạn có thể hỏi về: thêm thành viên, xem cây gia phả, sửa thành viên, tìm kiếm thành viên, đổi mật khẩu hoặc tạo gia phả."
     };
 
