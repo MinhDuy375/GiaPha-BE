@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,8 +48,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddHttpContextAccessor();
-
 // DI Services
 builder.Services.AddScoped<ICurrentFamilyTreeService, CurrentFamilyTreeService>();
 builder.Services.AddScoped<IGenealogyService, GenealogyService>();
@@ -68,6 +68,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 var jwtSecret = builder.Configuration["Jwt:Secret"]
     ?? throw new InvalidOperationException("Jwt:Secret is not configured.");
 var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+builder.Services.AddHealthChecks().AddMySql(connectionString!, name: "mysql", failureStatus: HealthStatus.Unhealthy);
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -157,7 +160,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.MapGet("/health", () => Results.Ok("OK"));
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors("AllowFrontend");
@@ -166,6 +168,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok("OK"));
-
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new { name = e.Key, status = e.Value.Status.ToString() })
+        });
+        await context.Response.WriteAsync(result);
+    }
+});
 app.Run();
