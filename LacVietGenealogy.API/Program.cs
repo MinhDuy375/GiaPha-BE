@@ -62,7 +62,7 @@ builder.Services.AddScoped<DbSeeder>();
 // Config Database Connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4, 8))));
 
 // Authentication & JWT Config
 var jwtSecret = builder.Configuration["Jwt:Secret"]
